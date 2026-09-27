@@ -1,0 +1,33 @@
+# Originales de respaldo: el sitio se sirve en WebP, estos .jpg/.png nunca
+# se descargan. Pesa 35 MB que no aportan nada al repo.
+recursos/*.jpg
+recursos/*.jpeg
+recursos/*.png
+!recursos/favicon.png
+!recursos/favicon-32.png
+
+# Sin uso en el sitio. AGENTS.md lo marca como borrable.
+recursos/claqueta.webp
+
+# Fuente propietada de Microsoft (Haettenschweiler). El repo es publico:
+# no se publica. Es solo el plan B de la pila, detras de Oswald, asi que
+# si falta el navegador cae en Anton/Impact y el titulo no cambia.
+recursos/Haettenschweiler.ttf
+
+# Credenciales de la base de datos. Cuando conectemos MySQL van aqui y NUNCA
+# en inscripcion.php, que es un archivo del repo.
+config.local.php
+
+# Notas de trabajo internas (preferencias del usuario, decisiones
+# pendientes, licencias). No son parte del sitio. Si las querés versionadas,
+# sacá esta línea, pero quedaría visible en un repo publico.
+AGENTS.md
+
+# Ruido del sistema y editores
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.tmp
+*.log

@@ -1,0 +1,64 @@
+const categories=[
+  {name:'Largometraje de ficción',number:'01',description:'Historias de ficción de largo aliento que amplían las miradas del cine contemporáneo.',detail:'Espacio dedicado a obras cinematográficas narrativas que exploran con sensibilidad y fuerza estética las dinámicas y realidades sociales, promoviendo el pensamiento crítico a través de una mirada artística transformadora.'},
+  {name:'Largometraje documental',number:'02',description:'Relatos documentales que observan, preservan y cuestionan nuestras realidades.',detail:'Área que proyecta y sustenta la investigación audiovisual y el testimonio vivo, evidenciando procesos históricos para el estudio de las identidades sociales y utilizando la realidad como materia prima de la creación cinematográfica.'},
+  {name:'Cortometraje de ficción',number:'03',description:'Narrativas breves de ficción con una voz cinematográfica propia.',detail:'Categoría enfocada en historias que apuestan por la síntesis narrativa y la audacia estética, retratando las realidades, conflictos, sueños y miradas diversas de nuestras sociedades.'},
+  {name:'Cortometraje documental',number:'04',description:'Miradas documentales concisas sobre territorios, personas y memoria.',detail:'Trabajos orientados al testimonio breve, la memoria local y el registro directo de la realidad, impulsado por una postura crítica que aborda historias, personajes y perspectivas diversas.'},
+  {name:'Laboratorio',number:'05',description:'Un espacio de creación colectiva guiado por el principio de aprender haciendo.',detail:'Categoría impulsada por la participación de las comunidades organizadas de la parroquia Caricuao (Consejos comunales, comunas, juntas de vecinos, colectivos y agrupaciones artísticas) para la realización de cortometrajes de ficción inspirados en las historias locales. Los equipos realizadores de cada eje territorial participan en espacios formativos teórico-prácticos, adquiriendo herramientas, metodologías y conceptos para desarrollar sus contenidos tanto desde el fondo como desde la forma del lenguaje audiovisual.'}
+];
+const formation=[
+ {number:'I',title:'Talleres cinematográficos',text:'Cuatro talleres de cuatro sesiones cada uno, orientados a diferentes áreas artísticas y culturales del audiovisual.'},
+ {number:'II',title:'Conversatorios',text:'Espacios de discusión e intercambio de saberes junto a instituciones y personalidades del ámbito cinematográfico, cultural y comunitario.'},
+ {number:'III',title:'Stop motion para niños y niñas',text:'Actividad lúdica y pedagógica para que niños y niñas conozcan la técnica de animación cuadro a cuadro y puedan narrar sus propias vivencias.'},
+ {number:'IV',title:'Laboratorio',text:'Taller teórico-práctico orientado a la realización de un cortometraje de ficción mediante el principio “Aprender haciendo”.'}
+];
+const juries=[
+ ['Largometraje de ficción',[
+  ['Efterpi Charalambidis','Directora y guionista','Reconocida directora, guionista, docente y actriz, con una trayectoria caracterizada por la exploración de temas sociales y la identidad nacional. Entre sus trabajos más destacados figuran los largometrajes Libertador Morales, el Justiciero y ¡Qué buena broma, Bromelia!'],
+  ['Carlos Marchan','Gestor y productor','Destacado gestor cultural, productor y profesional de las artes escénica y el audiovisual en Venezuela, con un perfil técnico-operativo se ha integrado en equipos creativos de envergadura, desempeñando tareas logísticas y de gestión de producción para largometrajes y cortometrajes nacionales, colaborando con reconocidas casas productoras e instituciones de fomento cultural.'],
+  ['Daniel Yegres','Director y productor','Director, guionista y productor con amplia trayectoria en el cine, la televisión y la publicidad. Es cofundador del reconocido sello de producción independiente Humana Cine y entre sus producciones más destacadas figura el largometraje Alí Primera.']]],
+ ['Largometraje documental',[
+  ['Carlos Bolívar','Realizador y gestor','Notable realizador, documentalista, productor y gestor cultural. Su trayectoria en el cine nacional se caracteriza por una profunda labor de investigación histórica, el rescate patrimonial de las artes visuales e intelectuales de Venezuela y el impulso al cine independiente y de proyección comunitaria'],
+  ['Rubén Hernández','Director y editor','prestigioso director, editor y realizador cinematográfico, caracterizado por su labor en el cine documental e histórico de contenido social, patrimonial e ideológico.'],
+  ['Ernesto Segovia','Realizador e investigador','Realizador, productor e investigador audiovisual, reconocido por su labor en el cine documental de investigación social, política e histórica, así como por su trabajo en la televisión venezolana.']]],
+ ['Cortometraje de ficción',[
+  ['Pily Galán','Productora y escenógrafa','Destacada productora, directora de arte y escenógrafa venezolana. Con una prolífica carrera en el cine, la televisión y las artes escénicas de Venezuela, ha sido galardonada en múltiples ediciones del Festival del Cine Venezolano (Mérida) y por el Centro Nacional Autónomo de Cinematografía (CNAC)'],
+  ['Alexander García','Realizador y director','Realizador, director y creador audiovisual emergente dentro del cine independiente venezolano, en sus mas reciente trabajos destaca, el cortometraje, Tocar con los Ojos.'],
+  ['Pedro Sánchez','Realizador y docente','Realizador Audiovisual, docente universitario, músico, compositor y artista popular de la parroquia Caricuao, es destacado por la realización de múltiples programas y contenidos para televisión y diversos formatos audiovisuales.']]],
+ ['Cortometraje documental',[
+  ['Manuel Pérez','Realizador y docente','Destacado realizador cinematográfico y docente académico en el área de artes audiovisuales.'],
+  ['Lucia Lamanna','Realizadora y montajista','Reconocida realizadora, directora, guionista y montajista. Es una de las figuras fundamentales dentro del cine documental e independiente en Venezuela, con una larga trayectoria vinculada a la formación audiovisual y la comunicación popular.'],
+  ['Kelvin Malavé','Realizador y docente','Realizador, documentalista, productor y docente universitario, reconocido por su trabajo en el cine de investigación social, el registro de luchas comunitarias y la producción documental independiente en Venezuela.']]],
+ ['Laboratorio',[
+  ['Winder Rivero','Creador audiovisual','Creador audiovisual, realizador y gestor cultural venezolano con más de dos décadas de trayectoria en el cine independiente, la televisión y la producción de contenidos comunitarios.'],
+  ['Rafael Espejo','Periodista y gestor','Periodista, comunicador popular y gestor cultural venezolano con una destacada labor en la parroquia Caricuao. Su trayectoria se caracteriza por el uso del periodismo de calle, la divulgación de iniciativas locales y el registro de la memoria e identidad comunitaria.'],
+  ['Carlos Conde','Concejal de Caracas','concejal de la ciudad de Caracas y presidente de la Comisión Permanente de Educación, Deporte y Recreación del Concejo Municipal del municipio Bolivariano Libertador.'],
+  ['Silvia Herrera','Periodista','Reconocida periodista con larga trayectoria en los quehaceres culturales de Venezuela, actualmente es la coordinadora general del centro de la diversidad cultural.'],
+  ['Luis Moisés Ramos','Gestor cultural','Gestor cultural, productor audiovisual, locutor e impulsor de iniciativas comunitarias en el oriente venezolano. Se desempeña como presidente de la Red de Cine en la región y lidera la organización de actividades culturales en el estado Sucre.']]]
+];
+const allies=['Ministerio del Poder Popular para la Cultura','CNAC','Villa del Cine','Amazonia Films','CENDIS','CENAF','TURISMOCCS','Alcaldía de Caracas','EMCI','Concejo Municipal de Caracas','Biblioteca Pública Aquiles Nazoa','Rickyfilms'];
+const categoryMarkup=compact=>categories.map((x,i)=>`<article><b>${x.number}</b><h3><button type="button" class="cat-open" data-cat="${i}">${x.name}</button></h3>${compact?'':`<p>${x.description}</p>`}</article>`).join('');
+document.querySelectorAll('[data-categories]').forEach(el=>el.innerHTML=categoryMarkup(el.classList.contains('compact')));
+const formationMsg='Próximamente publicaremos las fechas de los talleres.';
+const formationMarkup=formation.map((x,i)=>`<article><b>${x.number}</b><h3><button type="button" class="form-open" data-form="${i}">${x.title}</button></h3><p>${x.text}</p></article>`).join('');
+document.querySelectorAll('[data-formation]').forEach(el=>el.innerHTML=formationMarkup);
+const boxModal=document.getElementById('modal');
+if(boxModal){
+  const mNum=boxModal.querySelector('.modal-number'),mTitle=boxModal.querySelector('.modal-title'),mText=boxModal.querySelector('.modal-text'),mBox=boxModal.querySelector('.modal-box');
+  const openModal=(n,t,x)=>{mNum.textContent=n;mTitle.textContent=t;mText.textContent=x;mBox.scrollTop=0;if(boxModal.showModal)boxModal.showModal();else boxModal.setAttribute('open','');fitText();mTitle.focus()};
+  document.addEventListener('click',e=>{const b=e.target.closest('.cat-open');if(b){const c=categories[+b.dataset.cat];openModal(c.number,c.name,c.detail)}const f=e.target.closest('.form-open');if(f){const y=formation[+f.dataset.form];openModal(y.number,y.title,formationMsg)}const j=e.target.closest('.jury-open');if(j){const d=j.dataset.jury.split('-').map(Number),p=juries[d[0]][1][d[1]];openModal('',p[0],p[2])}});
+  boxModal.querySelector('.modal-close').addEventListener('click',()=>boxModal.close());
+  boxModal.addEventListener('click',e=>{if(e.target===boxModal)boxModal.close()});
+}
+document.querySelector('[data-juries]').innerHTML=juries.map((g,i)=>`<section><header><b>0${i+1}</b><h2>${g[0]}</h2></header><div class="people">${g[1].map((p,j)=>`<article class="person"><i><svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="32" cy="19" r="11"/><path d="M32 36c-12 0-22 7.5-22 16v12h44V52c0-8.5-10-16-22-16z"/></svg></i><h3>${p[0]}</h3><p class="person-role">${p[1]}</p><button class="jury-open" type="button" data-jury="${i}-${j}" aria-label="Ver información de ${p[0]}"></button></article>`).join('')}</div></section>`).join('');
+document.querySelector('[data-allies]').innerHTML=allies.map((x,i)=>`<article><h2>${x}</h2><b>${String(i+1).padStart(2,'0')}</b></article>`).join('');
+document.title='Festival de Cine Caricuao 2026';
+const fitSel='h1,h2,h3,.eyebrow,.person-role',lockScreen=document.querySelector('.bases-lock');let fitR;
+function fitText(){if(!matchMedia('(max-width:760px)').matches)return;cancelAnimationFrame(fitR);fitR=requestAnimationFrame(()=>{document.querySelectorAll(fitSel).forEach(el=>{el.style.fontSize='';if(!el.offsetWidth||el.closest('.bases-lock'))return;const base=parseFloat(getComputedStyle(el).fontSize),min=base*.62;let s=base;el.style.whiteSpace='nowrap';for(let k=0;k<8&&el.scrollWidth>el.clientWidth+1;k++){s=Math.max(min,s*(el.clientWidth/el.scrollWidth)*.97);el.style.fontSize=s.toFixed(2)+'px'}if(el.scrollWidth>el.clientWidth+1)el.style.fontSize='';el.style.whiteSpace=''})})}
+const opening=document.querySelector('#portada'),site=document.querySelector('#sitio'),menu=document.querySelector('#menu'),menuButton=document.querySelector('.menu-button');
+function showPage(){if(!opening||!site||!menu)return;const key=location.hash.slice(1),body=document.body;body.classList.remove('bases-lock-on');if(!key){opening.hidden=false;site.hidden=true;return}const page=document.querySelector(`[data-page="${key}"]`)||document.querySelector('[data-page="inicio"]'),locked=page.dataset.page==='bases';opening.hidden=true;site.hidden=false;document.querySelectorAll('.page').forEach(x=>{x.classList.toggle('active',x===page);x.inert=locked&&x===page});document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')===`#${key}`));menu.classList.remove('open');menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Abrir menú');scrollTo({top:0,behavior:'instant'});if(locked){body.classList.add('bases-lock-on');lockScreen.focus()}fitText()}
+menuButton.addEventListener('click',()=>{const open=menu.classList.toggle('open');menuButton.setAttribute('aria-expanded',String(open));menuButton.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú')});
+const introVideo=document.querySelector('.opening-video'),stillMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(introVideo){if(stillMotion)introVideo.removeAttribute('autoplay');if(matchMedia('(max-width:760px)').matches){introVideo.src='recursos/entrada-movil.mp4';introVideo.poster='recursos/entrada-poster-movil.webp';introVideo.load()}if(stillMotion)introVideo.pause()}
+addEventListener('hashchange',showPage);showPage();
+if(document.fonts)document.fonts.ready.then(fitText);
+addEventListener('load',fitText);addEventListener('resize',fitText);
