@@ -110,6 +110,68 @@ $db = ['host' => '', 'nombre' => '', 'usuario' => '', 'clave' => ''];
 if (is_file(__DIR__ . '/config.local.php')) include __DIR__ . '/config.local.php';
 $listo = $db['host'] !== '';
 
+$modo = (string) ($_POST['modo'] ?? '');
+$msgEstado = '';
+$msgErrores = [];
+$msg = ['nombre' => '', 'telefono' => '', 'correo' => '', 'mensaje' => ''];
+if ($modo === 'mensaje' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $msg = [
+        'nombre' => limpiar((string) ($_POST['nombre'] ?? '')),
+        'telefono' => limpiar((string) ($_POST['telefono'] ?? '')),
+        'correo' => limpiar((string) ($_POST['correo'] ?? '')),
+        'mensaje' => limpiar((string) ($_POST['mensaje'] ?? '')),
+    ];
+    if (trim((string) ($_POST['sitio_web'] ?? '')) !== '') {
+        $msgEstado = 'ok';
+    } else {
+        if ($msg['nombre'] === '') {
+            $msgErrores[] = 'El nombre es obligatorio.';
+        } elseif (largo($msg['nombre']) > 180) {
+            $msgErrores[] = 'El nombre es muy largo: máximo 180 caracteres.';
+        }
+        if ($msg['telefono'] === '') {
+            $msgErrores[] = 'El celular es obligatorio.';
+        } elseif ((int) strlen((string) preg_replace('/\D/', '', $msg['telefono'])) < 7) {
+            $msgErrores[] = 'Revisa el celular: debería tener al menos 7 dígitos.';
+        } elseif (largo($msg['telefono']) > 40) {
+            $msgErrores[] = 'El celular es muy largo: máximo 40 caracteres.';
+        }
+        if ($msg['correo'] === '') {
+            $msgErrores[] = 'El correo es obligatorio.';
+        } elseif (!filter_var($msg['correo'], FILTER_VALIDATE_EMAIL)) {
+            $msgErrores[] = 'Revisa el correo: no parece una dirección válida.';
+        } elseif (largo($msg['correo']) > 180) {
+            $msgErrores[] = 'El correo es muy largo: máximo 180 caracteres.';
+        }
+        if ($msg['mensaje'] === '') {
+            $msgErrores[] = 'El mensaje es obligatorio.';
+        } elseif (largo($msg['mensaje']) > 2000) {
+            $msgErrores[] = 'El mensaje es muy largo: máximo 2000 caracteres.';
+        }
+        if (!$msgErrores) {
+            if (!$listo) {
+                $msgEstado = 'sin-configurar';
+            } else {
+                try {
+                    $pdoM = new PDO(
+                        'mysql:host=' . $db['host'] . ';dbname=' . $db['nombre'] . ';charset=utf8mb4',
+                        $db['usuario'],
+                        $db['clave'],
+                        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+                    );
+                    $pdoM->prepare('INSERT INTO mensajes (nombre, telefono, correo, mensaje) VALUES (?, ?, ?, ?)')
+                        ->execute([$msg['nombre'], $msg['telefono'], $msg['correo'], $msg['mensaje']]);
+                    $msgEstado = 'ok';
+                } catch (Throwable $ex) {
+                    $msgEstado = 'error';
+                }
+            }
+        } else {
+            $msgEstado = 'bad';
+        }
+    }
+}
+
 $opciones = [
     'Largometraje de ficción',
     'Largometraje documental',
@@ -126,7 +188,7 @@ $nacMax = date('Y-m-d');
 $campos = [
     ['n' => 'categoria', 'l' => 'Categoría del proyecto', 't' => 'select', 'o' => $opciones],
     ['n' => 'responsable', 'l' => 'Nombre del responsable', 't' => 'text', 'ac' => 'name', 'lmax' => 180],
-    ['n' => 'telefono', 'l' => 'Teléfono de contacto', 't' => 'text', 'ac' => 'tel'],
+    ['n' => 'telefono', 'l' => 'Celular (WhatsApp)', 't' => 'text', 'ac' => 'tel'],
     ['n' => 'correo', 'l' => 'Correo electrónico', 't' => 'email', 'ac' => 'email', 'lmax' => 180],
     ['n' => 'nacimiento', 'l' => 'Fecha de nacimiento', 't' => 'date', 'min' => $nacMin, 'max' => $nacMax, 'h' => 'Si tienes menos de 18 años, al elegir esta fecha se abrirán aquí abajo los datos de tu representante legal.'],
     ['n' => 'nacionalidad', 'l' => '¿Venezolano o extranjero?', 't' => 'select', 'o' => $opcionesNac, 'e' => 'Elige una opción'],
@@ -174,7 +236,7 @@ $val = [];
 $estado = '';
 $esMenor = false;
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+if ($modo !== 'mensaje' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $bot = trim((string) ($_POST['sitio_web'] ?? '')) !== '';
 
     if ($bot) {
@@ -331,6 +393,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
       <button class="menu-button" type="button" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
     </header>
 <main class="inscripcion">
+<?php if ($modo === 'mensaje'): ?>
+      <section class="page-hero"><p class="eyebrow">Festival de Cine Caricuao 2026</p><h1>Contacto.</h1><p>El estado de tu mensaje al festival.</p></section>
+      <div class="form-block">
+        <?php if ($msgEstado === 'ok'): ?>
+        <div class="aviso ok" role="status"><h2>Recibimos tu mensaje.</h2><p>Gracias, <?= e($msg['nombre']) ?>. Te responderemos a <a href="mailto:<?= e($msg['correo']) ?>"><?= e($msg['correo']) ?></a> lo antes posible.</p></div>
+        <?php elseif ($msgEstado === 'bad'): ?>
+        <div class="aviso bad" role="alert"><h2>Faltan datos para enviar el mensaje.</h2><p><?= e(implode(' ', $msgErrores)) ?></p></div>
+        <?php elseif ($msgEstado === 'error'): ?>
+        <div class="aviso bad" role="alert"><h2>No pudimos guardar el mensaje.</h2><p>Hubo un problema al escribir en la base de datos. Inténtalo de nuevo o escríbenos a <a href="mailto:<?= e($correoRecibe) ?>"><?= e($correoRecibe) ?></a>.</p></div>
+        <?php elseif ($msgEstado === 'sin-configurar'): ?>
+        <div class="aviso warn" role="alert"><h2>Todavía no se guardan los mensajes.</h2><p>La página y el formulario ya funcionan, pero falta conectar la base de datos MySQL. Mientras tanto <strong>no se está guardando nada</strong>: escríbenos a <a href="mailto:<?= e($correoRecibe) ?>"><?= e($correoRecibe) ?></a>.</p></div>
+        <?php endif; ?>
+        <p class="enviar"><a class="button" href="index.html#contacto">Volver al sitio</a></p>
+      </div>
+<?php else: ?>
       <section class="page-hero"><p class="eyebrow">Festival de Cine Caricuao 2026</p><h1>Inscripción.</h1><p>Completa el formulario para inscribir tu obra en la primera edición del festival. Los campos marcados son obligatorios.</p></section>
       <div class="form-block">
         <?php if ($estado === 'ok'): ?>
@@ -374,6 +451,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 <?php endif; ?>
                 <?php if (isset($c['h'])): ?><span class="hint"><?= e($c['h']) ?><?= !empty($c['imgbb']) ? ' <a class="imgbb-link" href="https://imgbb.com/" target="_blank" rel="noopener noreferrer">Subir a imgBB ↗</a>' : '' ?></span><?php endif; ?>
                 <?php if ($mal): ?><span class="error"><?= e($err[$n]) ?></span><?php endif; ?>
+                <?php if ($n === 'correo'): ?><span class="error" id="f-correo-error" hidden>Revisa el correo: debe incluir el arroba (@).</span><?php endif; ?>
               </div>
               <?php endforeach; ?>
             </div>
@@ -384,8 +462,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         </form>
         <?php endif; ?>
       </div>
+      <?php endif; ?>
     </main>
-<footer><div><h2>Caricuao proyecta<br><em>sus historias.</em></h2><p>Festival de Cine Caricuao 2026 · Primera edición · Caracas, Venezuela.</p><p class="footer-credit"><img src="recursos/aliados/rickyfilms.webp" width="180" height="55" alt="" loading="lazy" decoding="async">Concepto y desarrollo: Producciones Rickyfilms, C.A.</p></div><div><img class="footer-logo" src="recursos/loguinho.webp" width="353" height="96" alt="Festival de Cine Caricuao"><div class="footer-icons"><a href="mailto:festivaldecinecaricuao@gmail.com" aria-label="Enviar correo">✉</a><a href="https://instagram.com/festivaldecinecaricuao" target="_blank" rel="noreferrer" aria-label="Abrir Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg></a></div></div></footer>
+<footer><div><h2>Caricuao proyecta<br><em>sus historias.</em></h2><p>Festival de Cine Caricuao 2026 · Primera edición · Caracas, Venezuela.</p><p class="footer-credit"><img src="recursos/aliados/rickyfilms.webp" width="180" height="55" alt="" loading="lazy" decoding="async">Concepto y desarrollo: Producciones Rickyfilms, C.A.</p></div><div><img class="footer-logo" src="recursos/loguinho.webp" width="353" height="96" alt="Festival de Cine Caricuao"><div class="footer-icons"><a href="login.php" aria-label="Acceder a la zona privada"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></a><a href="mailto:festivaldecinecaricuao@gmail.com" aria-label="Enviar correo">✉</a><a href="https://instagram.com/festivaldecinecaricuao" target="_blank" rel="noreferrer" aria-label="Abrir Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg></a></div></div></footer>
 <dialog class="modal modal-anio" id="modal-anio" aria-labelledby="modal-anio-title"><div class="modal-box"><div class="modal-head"><b class="modal-number">!</b><button class="modal-close" type="button" aria-label="Cerrar">&#215;</button></div><h2 class="modal-title" id="modal-anio-title" tabindex="-1">Obras del 2025 en adelante.</h2><p class="modal-text">Solo serán aceptadas las obras realizadas <strong>a partir del año 2025</strong>. Es una de las reglas del festival, así que cuando tengas listo el año de tu obra, puedes volver a escribirlo.</p></div></dialog>
 <script src="js/venezuela.js"></script>
   <script src="js/main.js"></script>
