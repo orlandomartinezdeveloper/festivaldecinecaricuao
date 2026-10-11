@@ -106,7 +106,8 @@ function geoIndice(): ?array
 
 $correoRecibe = 'festivaldecinecaricuao@gmail.com';
 
-$db = ['host' => '127.0.0.1', 'nombre' => 'festivaldecine', 'usuario' => 'root', 'clave' => ''];
+$db = ['host' => '', 'nombre' => '', 'usuario' => '', 'clave' => ''];
+if (is_file(__DIR__ . '/config.local.php')) include __DIR__ . '/config.local.php';
 $listo = $db['host'] !== '';
 
 $opciones = [
