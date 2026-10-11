@@ -21,6 +21,59 @@ function limpiar(string $s): string
     return trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $s));
 }
 
+function imgbbDirecto(string $u): string
+{
+    $u = trim($u);
+    if (!preg_match('~^https?://(?:www\.)?ibb\.co/([A-Za-z0-9]+)/?$~i', $u, $m)) {
+        return $u;
+    }
+    static $cache = [];
+    $id = $m[1];
+    if (array_key_exists($id, $cache)) {
+        return $cache[$id];
+    }
+    $directa = '';
+    if (function_exists('curl_init')) {
+        for ($i = 0; $i < 3 && $directa === ''; $i++) {
+            $ch = curl_init($u);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT => 5,
+                CURLOPT_CONNECTTIMEOUT => 4,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; FestivalCineCaricuao/1.0)',
+            ]);
+            $html = curl_exec($ch);
+            curl_close($ch);
+            if (is_string($html) && preg_match('~property="og:image"\s+content="(https://i\.ibb\.co/[^"]+)"~i', $html, $n)) {
+                $directa = html_entity_decode($n[1], ENT_QUOTES, 'UTF-8');
+            }
+        }
+    }
+    return $cache[$id] = ($directa !== '' ? $directa : $u);
+}
+
+function titulo(string $s): string
+{
+    $cortas = ['a', 'al', 'ante', 'bajo', 'con', 'contra', 'de', 'del', 'desde', 'e', 'el', 'en', 'entre', 'hacia', 'hasta', 'la', 'las', 'lo', 'los', 'o', 'para', 'por', 'que', 'se', 'sin', 'sobre', 'tras', 'u', 'un', 'una', 'unas', 'unos', 'y'];
+    $baja = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
+    $primera = true;
+    return (string) preg_replace_callback('/\S+/u', function (array $m) use ($cortas, &$primera): string {
+        $w = $m[0];
+        $esPrimera = $primera;
+        $primera = false;
+        if (!$esPrimera && in_array($w, $cortas, true)) {
+            return $w;
+        }
+        return (string) preg_replace_callback('/[^.\-]+/u', static function (array $p): string {
+            $seg = $p[0];
+            $c = function_exists('mb_substr') ? mb_substr($seg, 0, 1, 'UTF-8') : substr($seg, 0, 1);
+            $r = function_exists('mb_substr') ? mb_substr($seg, 1, null, 'UTF-8') : substr($seg, 1);
+            return (function_exists('mb_strtoupper') ? mb_strtoupper($c, 'UTF-8') : strtoupper($c)) . $r;
+        }, $w);
+    }, $baja);
+}
+
 function edadDe(string $fecha): ?int
 {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
@@ -35,6 +88,61 @@ function edadDe(string $fecha): ?int
         return null;
     }
     return (int) $d->diff($hoy)->y;
+}
+
+function subirImagen(array $file, string $tipo): string
+{
+    if (!isset($file['error']) || is_array($file['error'])) {
+        return '';
+    }
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return '';
+    }
+    if ($file['size'] < 1024 || $file['size'] > 15 * 1024 * 1024) {
+        return '';
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+    if ($mime !== 'image/jpeg') {
+        return '';
+    }
+    $info = @getimagesize($file['tmp_name']);
+    if ($info === false || $info[0] < 50 || $info[1] < 50) {
+        return '';
+    }
+    if ($info[0] > 8000 || $info[1] > 8000) {
+        return '';
+    }
+    $src = @imagecreatefromjpeg($file['tmp_name']);
+    if ($src === false) {
+        return '';
+    }
+    @unlink($file['tmp_name']);
+    $dir = __DIR__ . '/recursos/posterscap';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    $nombre = bin2hex(random_bytes(8)) . '.webp';
+    $destino = $dir . '/' . $nombre;
+    $maxDim = $tipo === 'poster' ? 2400 : 1920;
+    $w = imagesx($src);
+    $h = imagesy($src);
+    if ($w > $maxDim || $h > $maxDim) {
+        $ratio = min($maxDim / $w, $maxDim / $h);
+        $nw = (int) round($w * $ratio);
+        $nh = (int) round($h * $ratio);
+        $dst = imagecreatetruecolor($nw, $nh);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+        imagedestroy($src);
+        $src = $dst;
+    }
+    $calidad = $tipo === 'poster' ? 92 : 82;
+    imagewebp($src, $destino, $calidad);
+    imagedestroy($src);
+    if (!is_file($destino)) {
+        return '';
+    }
+    return 'recursos/posterscap/' . $nombre;
 }
 
 function geoIndice(): ?array
@@ -192,7 +300,7 @@ $campos = [
     ['n' => 'correo', 'l' => 'Correo electrónico', 't' => 'email', 'ac' => 'email', 'lmax' => 180],
     ['n' => 'nacimiento', 'l' => 'Fecha de nacimiento', 't' => 'date', 'min' => $nacMin, 'max' => $nacMax, 'h' => 'Si tienes menos de 18 años, al elegir esta fecha se abrirán aquí abajo los datos de tu representante legal.'],
     ['n' => 'nacionalidad', 'l' => '¿Venezolano o extranjero?', 't' => 'select', 'o' => $opcionesNac, 'e' => 'Elige una opción'],
-    ['n' => 'cedula', 'l' => 'Cédula', 't' => 'cedula', 'lmax' => 18],
+    ['n' => 'cedula', 'l' => 'Cédula', 't' => 'cedula', 'lmax' => 18, 'h' => 'V.-Número de cédula con puntos, por ejemplo V.-12.345.678. Al salir del campo el formulario pone los puntos de miles.'],
     ['n' => 'estado', 'l' => 'Estado', 't' => 'geo', 'e' => 'Elige un estado'],
     ['n' => 'ciudad', 'l' => 'Ciudad', 't' => 'geo', 'e' => 'Elige una ciudad'],
     ['n' => 'municipio', 'l' => 'Municipio', 't' => 'geo', 'e' => 'Elige un municipio'],
@@ -210,10 +318,10 @@ $campos = [
     ['n' => 'equipo', 'l' => 'Equipo técnico', 't' => 'area', 'full' => 1, 'lmax' => 3000, 'h' => 'Escribe los nombres y apellidos de las personas que integran el equipo técnico y, junto a cada uno, describe su función (ej.: Juan Pérez – Director de fotografía, María López – Sonido).'],
     ['n' => 'elenco', 'l' => 'Elenco', 't' => 'area', 'full' => 1, 'lmax' => 3000, 'h' => 'Escribe los nombres y apellidos de actores y actrices, uno por línea o separados por punto y coma (ej.: Ana Torres – Protagonista, Carlos Rivas – Personaje secundario).'],
     ['n' => 'sinopsis', 'l' => 'Sinopsis', 't' => 'area', 'full' => 1, 'lmax' => 500, 'h' => 'Máximo 500 caracteres.'],
-    ['n' => 'poster', 'l' => 'Link del póster (JPEG/JPG, 300 DPI)', 't' => 'url', 'full' => 1, 'lmax' => 500, 'h' => 'Súbelo a imgBB y pega aquí el enlace que te da.', 'imgbb' => 1],
-    ['n' => 'f1', 'l' => 'Link de fotograma (1)', 't' => 'url', 'full' => 1, 'lmax' => 500, 'h' => 'Súbelo a imgBB y pega aquí el enlace.', 'imgbb' => 1],
-    ['n' => 'f2', 'l' => 'Link de fotograma (2)', 't' => 'url', 'full' => 1, 'lmax' => 500, 'h' => 'Súbelo a imgBB y pega aquí el enlace.', 'imgbb' => 1],
-    ['n' => 'f3', 'l' => 'Link de fotograma (3)', 't' => 'url', 'full' => 1, 'lmax' => 500, 'h' => 'Súbelo a imgBB y pega aquí el enlace.', 'imgbb' => 1],
+    ['n' => 'poster', 'l' => 'Póster (JPG, 300 DPI)', 't' => 'file', 'full' => 1, 'h' => 'Sube tu póster en formato JPG. Debe ser de alta calidad (300 DPI) para impresión.'],
+    ['n' => 'f1', 'l' => 'Fotograma (1)', 't' => 'file', 'full' => 1, 'h' => 'Sube un fotograma de tu obra en formato JPG.'],
+    ['n' => 'f2', 'l' => 'Fotograma (2)', 't' => 'file', 'full' => 1, 'h' => 'Sube un fotograma de tu obra en formato JPG.'],
+    ['n' => 'f3', 'l' => 'Fotograma (3)', 't' => 'file', 'full' => 1, 'h' => 'Sube un fotograma de tu obra en formato JPG.'],
     ['n' => 'youtube', 'l' => 'Link de YouTube (no listado, 1920 × 1080)', 't' => 'url', 'full' => 1, 'lmax' => 500, 'h' => 'En YouTube, comparte en modo "No listado" y confirma que el video se vea en 1920 × 1080.'],
 ];
 
@@ -246,9 +354,35 @@ if ($modo !== 'mensaje' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $esMenor = $edad !== null && $edad < 18;
 
         foreach ($campos as $c) {
+            if ($c['t'] === 'file') {
+                $fileKey = $c['n'];
+                $tipo = $c['n'] === 'poster' ? 'poster' : 'fotograma';
+                $v = '';
+                if (isset($_FILES[$fileKey]) && is_array($_FILES[$fileKey])) {
+                    $v = subirImagen($_FILES[$fileKey], $tipo);
+                }
+                if ($v === '') {
+                    $prev = trim((string) ($_POST[$c['n'] . '_prev'] ?? ''));
+                    if ($prev !== '' && strpos($prev, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $prev)) {
+                        $v = $prev;
+                    }
+                }
+                $val[$c['n']] = $v;
+                if ($v === '') {
+                    $err[$c['n']] = 'Este campo es obligatorio.';
+                    continue;
+                }
+                continue;
+            }
             $v = limpiar((string) ($_POST[$c['n']] ?? ''));
+            if (!empty($c['imgbb'])) {
+                $v = imgbbDirecto($v);
+            }
             if (!empty($c['edicion'])) {
                 $v = 'Primera Edición - 2026';
+            }
+            if (in_array($c['n'], ['obra', 'director', 'responsable'], true)) {
+                $v = titulo($v);
             }
             $val[$c['n']] = $v;
 
@@ -421,7 +555,7 @@ if ($modo !== 'mensaje' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         <?php endif; ?>
 
         <?php if ($estado !== 'ok'): ?>
-        <form method="post" action="" novalidate>
+        <form method="post" action="" enctype="multipart/form-data" novalidate>
           <input type="text" name="sitio_web" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
           <?php foreach ($grupos as $g): $esRep = !empty($g['menor']); ?>
           <fieldset<?= $esRep ? ' class="rep-block" data-hoy="' . e(date('Y-m-d')) . '"' . ($esMenor ? '' : ' hidden') : '' ?>>
@@ -446,6 +580,10 @@ if ($modo !== 'mensaje' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 </select>
                 <?php elseif ($c['t'] === 'area'): ?>
                 <textarea id="<?= e($id) ?>" name="<?= e($n) ?>" rows="4" required aria-required="true"<?= isset($c['lmax']) ? ' maxlength="' . e((string) $c['lmax']) . '"' : '' ?><?= $mal ? ' aria-invalid="true"' : '' ?>><?= e($val[$n] ?? '') ?></textarea>
+                <?php elseif ($c['t'] === 'file'): ?>
+                <input type="hidden" name="<?= e($n) ?>_prev" value="<?= e($val[$n] ?? '') ?>">
+                <input id="<?= e($id) ?>" type="file" name="<?= e($n) ?>" accept=".jpg,image/jpeg" required aria-required="true"<?= $mal ? ' aria-invalid="true"' : '' ?>>
+                <label class="file-btn" for="<?= e($id) ?>"><span class="file-icon">+</span><span class="file-label"><?= e($c['l']) ?></span><span class="file-name"></span></label>
                 <?php else: ?>
                 <input id="<?= e($id) ?>" type="<?= $c['t'] === 'cedula' ? 'text' : e($c['t']) ?>" name="<?= e($n) ?>" value="<?= e($val[$n] ?? (isset($c['edicion']) ? 'Primera Edición - 2026' : '')) ?>" required aria-required="true"<?= isset($c['edicion']) ? ' class="fijo" disabled' : '' ?><?= $c['t'] === 'cedula' ? ' inputmode="numeric" autocomplete="off" data-cedula="' . e($n) . '"' : '' ?><?= isset($c['ac']) ? ' autocomplete="' . e($c['ac']) . '"' : '' ?><?= isset($c['min']) ? ' min="' . e($c['min']) . '"' : '' ?><?= isset($c['max']) ? ' max="' . e($c['max']) . '"' : '' ?><?= isset($c['lmax']) ? ' maxlength="' . e((string) $c['lmax']) . '"' : '' ?><?= $mal ? ' aria-invalid="true"' : '' ?>>
                 <?php endif; ?>
