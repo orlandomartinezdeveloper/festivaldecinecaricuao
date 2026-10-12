@@ -104,6 +104,13 @@ footer>div:last-child a:hover{border-color:var(--ivory);background:#1b3226}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .enviar{margin:0 0 1.4rem}
 .form-grid+.enviar{margin-top:1.8rem}
+.form-aviso{margin:0 0 1.4rem}
+.formation-grid article.eje-card{cursor:default}
+.formation-grid article .inscribirse-eje{margin-top:1.6rem}
+.modal-box fieldset{border:0;margin:0 0 1.6rem;padding:0;min-width:0}
+.modal-box fieldset.rep-block{padding:0 1.2rem 1.2rem;border-left:3px solid var(--red);background:var(--paper)}
+.modal-box fieldset legend{float:left;width:100%;padding:0 0 .55rem;margin:0 0 1.2rem;border-bottom:1px solid var(--line);font-family:var(--display);font-size:.95rem;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.modal-box fieldset legend+*{clear:both}
 .privado{padding:2.6rem max(4vw,1.25rem) 6rem;max-width:74rem;margin:0 auto}
 .salir{margin:0 0 2.2rem}
 .salir .button{background:transparent;color:var(--red)}
