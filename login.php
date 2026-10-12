@@ -689,7 +689,7 @@ if ($entrado && $pdo) {
         <div class="aviso" role="status"><h2>Sin resultados.</h2><p>No hay inscripciones que coincidan con la búsqueda.</p></div>
         <?php else: ?>
         <div class="sub-list">
-          <div class="<div class="<div class="sub-head"><b>Nº</b><span>Nombre</span><span>Teléfono</span><span>Fecha de nacimiento</span><span class="sub-head-acc">Acciones</span></div>
+          <div class="<div class="<div class="<div class="<div class="sub-head"><b>Nº</b><span>Nombre</span><span>Teléfono</span><span>Fecha de nacimiento</span><span class="sub-head-acc">Acciones</span></div>
           <?php $n = 0; foreach ($filas as $r): $n++; $id = (string) $r['id']; $num = str_pad((string) $n, 2, '0', STR_PAD_LEFT); ?>
           <article class="sub-item">
             <div class="sub-row">
@@ -713,22 +713,20 @@ if ($entrado && $pdo) {
                 <button class="sub-del" type="button" data-del="<?= e($id) ?>" data-obra="<?= e((string) $r['obra']) ?>" aria-label="Eliminar la inscripción de <?= e((string) $r['obra']) ?>">Eliminar</button>
               </div>
             </div>
-                        <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
-              <?php
-              $obraPoster = '';
-              $posterRuta = (string) ($r['poster'] ?? '');
-              if ($posterRuta !== '' && strpos($posterRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $posterRuta)) {
-                  $obraPoster = $posterRuta;
-              }
-              $obraSin = trim((string) ($r['sinopsis'] ?? ''));
-              $obraCaps = [];
-              foreach (['f1', 'f2', 'f3'] as $ck) {
-                  $capRuta = (string) ($r[$ck] ?? '');
-                  if ($capRuta !== '' && strpos($capRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $capRuta)) {
-                      $obraCaps[] = $capRuta;
-                  }
-              }
-              $obraVideo = embedYt((string) ($r['youtube'] ?? ''));
+                        <div class="            <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
+              <dl class="sub-data">
+                <div><dt>Nombre</dt><dd><?= e((string) $r['nombre']) ?></dd></div>
+                <div><dt>Categoría</dt><dd><?= e((string) $r['categoria']) ?></dd></div>
+                <div><dt>Cédula</dt><dd><?= e(trim((string) $r['nacionalidad'] . ' ' . (string) $r['cedula'])) ?></dd></div>
+                <div><dt>Fecha de nacimiento</dt><dd><?= e(fechaDia((string) $r['nacimiento'])) ?></dd></div>
+                <div><dt>Celular (WhatsApp)</dt><dd><a href="tel:<?= e(telLimpio((string) $r['telefono'])) ?>"><?= e((string) $r['telefono']) ?></a></dd></div>
+                <div><dt>Correo</dt><dd><a href="mailto:<?= e((string) $r['correo']) ?>"><?= e((string) $r['correo']) ?></a></dd></div>
+                <?php if (trim((string) $r['representante_nombre']) !== ''): ?>
+                <div><dt>Representante</dt><dd><?= e(trim((string) $r['representante_parentesco'] . ': ' . (string) $r['representante_nombre'] . ' · ' . trim((string) $r['representante_nacionalidad'] . ' ' . (string) $r['representante_cedula']))) ?></dd></div>
+                <?php endif; ?>
+                <div><dt>Fecha de inscripción</dt><dd><?= e(fechaHora((string) $r['creado'])) ?></dd></div>
+              </dl>
+            </div>'] ?? ''));
               $obraMod = ($obraPoster !== '' && $obraSin !== '') ? '' : ($obraPoster !== '' ? ' solo-poster' : ' solo-texto');
               ?>
               <?php if ($obraPoster !== '' || $obraSin !== ''): ?>
