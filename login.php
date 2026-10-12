@@ -689,7 +689,7 @@ if ($entrado && $pdo) {
         <div class="aviso" role="status"><h2>Sin resultados.</h2><p>No hay inscripciones que coincidan con la búsqueda.</p></div>
         <?php else: ?>
         <div class="sub-list">
-          <div class="sub-head"><b>Nº</b><span>Título de la obra</span><span>Categoría</span><span>Director(es)</span><span>Año</span><span class="sub-head-acc">Acciones</span></div>
+          <div class="sub-head"><b>Nº</b><span>Nombre</span><span>Teléfono</span><span>Fecha de nacimiento</span><span class="sub-head-acc">Acciones</span></div>
           <?php $n = 0; foreach ($filas as $r): $n++; $id = (string) $r['id']; $num = str_pad((string) $n, 2, '0', STR_PAD_LEFT); ?>
           <article class="sub-item">
             <div class="sub-row">
@@ -713,32 +713,20 @@ if ($entrado && $pdo) {
                 <button class="sub-del" type="button" data-del="<?= e($id) ?>" data-obra="<?= e((string) $r['obra']) ?>" aria-label="Eliminar la inscripción de <?= e((string) $r['obra']) ?>">Eliminar</button>
               </div>
             </div>
-            <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
-              <?php
-              $obraPoster = '';
-              $posterRuta = (string) ($r['poster'] ?? '');
-              if ($posterRuta !== '' && strpos($posterRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $posterRuta)) {
-                  $obraPoster = $posterRuta;
-              }
-              $obraSin = trim((string) ($r['sinopsis'] ?? ''));
-              $obraCaps = [];
-              foreach (['f1', 'f2', 'f3'] as $ck) {
-                  $capRuta = (string) ($r[$ck] ?? '');
-                  if ($capRuta !== '' && strpos($capRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $capRuta)) {
-                      $obraCaps[] = $capRuta;
-                  }
-              }
-              $obraVideo = embedYt((string) ($r['youtube'] ?? ''));
-              $obraMod = ($obraPoster !== '' && $obraSin !== '') ? '' : ($obraPoster !== '' ? ' solo-poster' : ' solo-texto');
-              ?>
-              <?php if ($obraPoster !== '' || $obraSin !== ''): ?>
-              <div class="obra-media<?= $obraMod ?>">
-                <?php if ($obraPoster !== ''): ?><div class="obra-poster"><img src="<?= e($obraPoster) ?>" alt="Póster de la obra <?= e((string) $r['obra']) ?>" decoding="async"></div><?php endif; ?>
-                <?php if ($obraSin !== ''): ?><div class="obra-sinopsis"><h3>Sinopsis</h3><p><?= nl2br(e($obraSin)) ?></p></div><?php endif; ?>
-              </div>
-              <?php endif; ?>
+            <div class="            <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
               <dl class="sub-data">
-                <div><dt>Director</dt><dd><?= e((string) $r['director']) ?></dd></div>
+                <div><dt>Nombre</dt><dd><?= e((string) $r['nombre']) ?></dd></div>
+                <div><dt>Categoría</dt><dd><?= e((string) $r['categoria']) ?></dd></div>
+                <div><dt>Cédula</dt><dd><?= e(trim((string) $r['nacionalidad'] . ' ' . (string) $r['cedula'])) ?></dd></div>
+                <div><dt>Fecha de nacimiento</dt><dd><?= e(fechaDia((string) $r['nacimiento'])) ?></dd></div>
+                <div><dt>Celular (WhatsApp)</dt><dd><a href="tel:<?= e(telLimpio((string) $r['telefono'])) ?>"><?= e((string) $r['telefono']) ?></a></dd></div>
+                <div><dt>Correo</dt><dd><a href="mailto:<?= e((string) $r['correo']) ?>"><?= e((string) $r['correo']) ?></a></dd></div>
+                <?php if (trim((string) $r['representante_nombre']) !== ''): ?>
+                <div><dt>Representante</dt><dd><?= e(trim((string) $r['representante_parentesco'] . ': ' . (string) $r['representante_nombre'] . ' · ' . trim((string) $r['representante_nacionalidad'] . ' ' . (string) $r['representante_cedula']))) ?></dd></div>
+                <?php endif; ?>
+                <div><dt>Fecha de inscripción</dt><dd><?= e(fechaHora((string) $r['creado'])) ?></dd></div>
+              </dl>
+            </div>
                 <div><dt>Productor</dt><dd><?= e((string) $r['productor']) ?></dd></div>
                 <div><dt>Guionista</dt><dd><?= e((string) $r['guionista']) ?></dd></div>
                 <div><dt>Equipo</dt><dd><?= nl2br(e((string) $r['equipo'])) ?></dd></div>
@@ -802,13 +790,21 @@ if ($entrado && $pdo) {
         </div>
         <?php endif; ?>
         <?php endif; ?>
-      <?php elseif ($vista === 'formacion'): ?>
-      <?php if (!$hayTablaFormacion): ?>
-      <div class="aviso warn" role="alert"><h2>La tabla de interesados no existe.</h2><p>Hay que crear la tabla <strong>interesados_formacion</strong> en la base de datos.</p></div>
-      <?php elseif (!$interesados): ?>
-      <div class="aviso" role="status"><h2>No hay interesados todavía.</h2><p>Cuando alguien se inscriba desde la página de Formación, aparecerá aquí agrupado por categoría.</p></div>
-      <?php else: ?>
-      <div class="sub-list">
+       <?php elseif ($vista === 'formacion'): ?>
+       <?php if (!$hayTablaFormacion): ?>
+       <div class="aviso warn" role="alert"><h2>La tabla de interesados no existe.</h2><p>Hay que crear la tabla <strong>interesados_formacion</strong> en la base de datos.</p></div>
+       <?php elseif (!$interesados): ?>
+       <div class="aviso" role="status"><h2>No hay interesados todavía.</h2><p>Cuando alguien se inscriba desde la página de Formación, aparecerá aquí agrupado por categoría.</p></div>
+       <?php else: ?>
+       <form class="sub-tools" method="get" action="login.php">
+         <input type="hidden" name="vista" value="formacion">
+         <div class="sub-buscar">
+           <input type="search" name="qf" value="<?= e($qf ?? '') ?>" placeholder="Nombre, teléfono, correo o cédula" aria-label="Buscar interesados en formación">
+           <button class="button" type="submit">Buscar</button>
+         </div>
+         <a class="sub-clear" href="login.php?vista=formacion">Ver todas</a>
+       </form>
+       <div class="sub-list">
         <div class="sub-head"><b>Nº</b><span>Categoría</span><span>Nombre</span><span>Cédula</span><span>Nacimiento</span><span>Celular</span><span>Correo</span><span>Representante</span><span class="sub-head-acc">Fecha</span></div>
         <?php 
         $n = 0; 
@@ -820,17 +816,12 @@ if ($entrado && $pdo) {
         ?>
         <article class="sub-item<?= $showCat ? ' cat-break' : '' ?>">
           <div class="sub-row">
-            <button class="sub-open" type="button" data-sub="<?= e($id) ?>">
-              <b><?= e($num) ?></b>
-              <?php if ($showCat): ?><span class="sub-cat-label"><?= e($cat) ?></span><?php else: ?><span class="sub-cat-label" aria-hidden="true"></span><?php endif; ?>
-              <span class="sub-nombre"><?= e((string) $r['nombre']) ?></span>
-              <span class="sub-cedula"><?= e((string) $r['cedula']) ?></span>
-              <span class="sub-nac"><?= e(fechaDia((string) $r['nacimiento'])) ?></span>
-              <span class="sub-tel"><?= e((string) $r['telefono']) ?></span>
-              <span class="sub-correo"><?= e((string) $r['correo']) ?></span>
-              <span class="sub-rep"><?= e(trim((string) $r['representante_parentesco'] . ': ' . (string) $r['representante_nombre'] . ' · ' . trim((string) $r['representante_nacionalidad'] . ' ' . (string) $r['representante_cedula']))) ?></span>
-              <span class="sub-fecha"><?= e(fechaHora((string) $r['creado'])) ?></span>
-            </button>
+             <button class="sub-open" type="button" data-sub="<?= e($id) ?>">
+               <b><?= e($num) ?></b>
+               <span class="sub-nombre"><?= e((string) $r['nombre']) ?></span>
+               <span class="sub-tel"><?= e((string) $r['telefono']) ?></span>
+               <span class="sub-nac"><?= e(fechaDia((string) $r['nacimiento'])) ?></span>
+             </button>
             <div class="sub-actions single">
               <button class="sub-del" type="button" data-del="<?= e($id) ?>" data-obra="<?= e((string) $r['nombre']) ?>" data-tabla="formacion" aria-label="Eliminar el interesado <?= e((string) $r['nombre']) ?>">Eliminar</button>
             </div>
