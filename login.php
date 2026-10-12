@@ -713,20 +713,32 @@ if ($entrado && $pdo) {
                 <button class="sub-del" type="button" data-del="<?= e($id) ?>" data-obra="<?= e((string) $r['obra']) ?>" aria-label="Eliminar la inscripción de <?= e((string) $r['obra']) ?>">Eliminar</button>
               </div>
             </div>
-            <div class="            <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
+                        <div class="sub-full" id="sub-full-<?= e($id) ?>" hidden>
+              <?php
+              $obraPoster = '';
+              $posterRuta = (string) ($r['poster'] ?? '');
+              if ($posterRuta !== '' && strpos($posterRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $posterRuta)) {
+                  $obraPoster = $posterRuta;
+              }
+              $obraSin = trim((string) ($r['sinopsis'] ?? ''));
+              $obraCaps = [];
+              foreach (['f1', 'f2', 'f3'] as $ck) {
+                  $capRuta = (string) ($r[$ck] ?? '');
+                  if ($capRuta !== '' && strpos($capRuta, 'recursos/posterscap/') === 0 && is_file(__DIR__ . '/' . $capRuta)) {
+                      $obraCaps[] = $capRuta;
+                  }
+              }
+              $obraVideo = embedYt((string) ($r['youtube'] ?? ''));
+              $obraMod = ($obraPoster !== '' && $obraSin !== '') ? '' : ($obraPoster !== '' ? ' solo-poster' : ' solo-texto');
+              ?>
+              <?php if ($obraPoster !== '' || $obraSin !== ''): ?>
+              <div class="obra-media<?= $obraMod ?>">
+                <?php if ($obraPoster !== ''): ?><div class="obra-poster"><img src="<?= e($obraPoster) ?>" alt="Póster de la obra <?= e((string) $r['obra']) ?>" decoding="async"></div><?php endif; ?>
+                <?php if ($obraSin !== ''): ?><div class="obra-sinopsis"><h3>Sinopsis</h3><p><?= nl2br(e($obraSin)) ?></p></div><?php endif; ?>
+              </div>
+              <?php endif; ?>
               <dl class="sub-data">
-                <div><dt>Nombre</dt><dd><?= e((string) $r['nombre']) ?></dd></div>
-                <div><dt>Categoría</dt><dd><?= e((string) $r['categoria']) ?></dd></div>
-                <div><dt>Cédula</dt><dd><?= e(trim((string) $r['nacionalidad'] . ' ' . (string) $r['cedula'])) ?></dd></div>
-                <div><dt>Fecha de nacimiento</dt><dd><?= e(fechaDia((string) $r['nacimiento'])) ?></dd></div>
-                <div><dt>Celular (WhatsApp)</dt><dd><a href="tel:<?= e(telLimpio((string) $r['telefono'])) ?>"><?= e((string) $r['telefono']) ?></a></dd></div>
-                <div><dt>Correo</dt><dd><a href="mailto:<?= e((string) $r['correo']) ?>"><?= e((string) $r['correo']) ?></a></dd></div>
-                <?php if (trim((string) $r['representante_nombre']) !== ''): ?>
-                <div><dt>Representante</dt><dd><?= e(trim((string) $r['representante_parentesco'] . ': ' . (string) $r['representante_nombre'] . ' · ' . trim((string) $r['representante_nacionalidad'] . ' ' . (string) $r['representante_cedula']))) ?></dd></div>
-                <?php endif; ?>
-                <div><dt>Fecha de inscripción</dt><dd><?= e(fechaHora((string) $r['creado'])) ?></dd></div>
-              </dl>
-            </div>
+                <div><dt>Director</dt><dd><?= e((string) $r['director']) ?></dd></div>
                 <div><dt>Productor</dt><dd><?= e((string) $r['productor']) ?></dd></div>
                 <div><dt>Guionista</dt><dd><?= e((string) $r['guionista']) ?></dd></div>
                 <div><dt>Equipo</dt><dd><?= nl2br(e((string) $r['equipo'])) ?></dd></div>
