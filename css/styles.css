@@ -104,6 +104,7 @@ footer>div:last-child a:hover{border-color:var(--ivory);background:#1b3226}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .enviar{margin:0 0 1.4rem}
 .form-grid+.enviar{margin-top:1.8rem}
+#form-interesado .enviar{margin-top:2.4rem}
 .form-aviso{margin:0 0 1.4rem}
 .formation-grid article.eje-card{cursor:default}
 .formation-grid article .inscribirse-eje{margin-top:1.6rem}
