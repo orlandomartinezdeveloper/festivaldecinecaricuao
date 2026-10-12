@@ -689,7 +689,7 @@ if ($entrado && $pdo) {
         <div class="aviso" role="status"><h2>Sin resultados.</h2><p>No hay inscripciones que coincidan con la búsqueda.</p></div>
         <?php else: ?>
         <div class="sub-list">
-          <div class="<div class="<div class="<div class="<div class="sub-head"><b>Nº</b><span>Nombre</span><span>Teléfono</span><span>Fecha de nacimiento</span><span class="sub-head-acc">Acciones</span></div>
+          <div class="<div class="<div class="<div class="<div class="<div class="sub-head"><b>Nº</b><span>Título de la obra</span><span>Tipo</span><span>Director</span><span>Edición</span><span class="sub-head-acc">Acciones</span></div>
           <?php $n = 0; foreach ($filas as $r): $n++; $id = (string) $r['id']; $num = str_pad((string) $n, 2, '0', STR_PAD_LEFT); ?>
           <article class="sub-item">
             <div class="sub-row">
