@@ -18,6 +18,10 @@ recursos/Haettenschweiler.ttf
 # en inscripcion.php, que es un archivo del repo.
 config.local.php
 
+# Volcado de la base para importar en el hosting (phpMyAdmin). Lleva datos
+# personales de las inscripciones y los hashes de las cuentas: no se publica.
+festivaldecine.sql
+
 # Notas de trabajo internas (preferencias del usuario, decisiones
 # pendientes, licencias). No son parte del sitio. Si las querés versionadas,
 # sacá esta línea, pero quedaría visible en un repo publico.
